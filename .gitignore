@@ -25,3 +25,6 @@ coverage.xml
 *.swp
 *.bak
 *.tmp
+
+# archivos de Mac
+.DS_Store
