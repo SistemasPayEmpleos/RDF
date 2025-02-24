@@ -1,0 +1,21 @@
+{%extends 'base.html'%}
+{%block content%}
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} text-center">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    <form action="/ingresando" method="post">
+        <label for="credenciales">Ingresa Credenciales de Firebase(api key)</label>
+        <input type="file" name="credenciales" id="credenciales" class="form-control mt-2">
+        
+        <label for="backup">Ingresa base de datos(extención json)</label>
+        <input type="file" name="backup" id="backup" class="form-control mt-2 mb-3">
+
+        <button class="btn btn-primary" type="submit">Ingresar datos</button>
+    </form>
+</main>
+{%endblock%}

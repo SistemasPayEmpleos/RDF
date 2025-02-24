@@ -1,0 +1,52 @@
+{%extends 'base.html'%}
+{%block content%}
+<main class="container">
+    <h1 class="text-center">Bienvenido RDF (Recuperador de datos de firestore)</h1>
+    <p>¿Que es esto?</p>
+    <p>Esto es una pequeña aplicacion para poder hacer una copia de seguridad de los datos de las distintas páginas en un archivo
+        json. 
+    </p>
+    <div class="row">
+        <div class="col">
+            <form id="formulario" action="/datos_completos" method="post" enctype="multipart/form-data">
+                <div>
+                    <label for="file-select">Selecciona archivo</label>
+                    <input type="file" class="form-control" id="file-select" name="file-select">
+                </div>
+                <div>
+                    <label for="nombre">Nombre de la carpeta</label>
+                    <input type="text" id="nombre" name="nombre" required class="form-control">
+
+                    <label for="nombre_ar">Nombre del archivo</label>
+                    <input type="text" name="nombre_ar" id="nombre_ar" required class="form-control">
+                </div>
+                <section class="mt-3">
+                    <label for="todo">Todo (Recomendado)</label>
+                    <input type="radio" id="todo" checked>
+                    <label for="uno">Por Colección</label>
+                    <input type="radio" id="uno">
+                </section>
+                <hr class="sep" hidden>
+                <label for="sistema" hidden>A que página se necesita hacer respaldo</label>
+                <select name="sitema" id="sistema" class="form-control" hidden>
+                    <option value="payempleos">Pay Empleos</option>
+                    <option value="base-sirec">Base Sirec</option>
+                    <option value="sistema-de-informacion">Sistema de información</option>
+                </select>
+                <hr class="sep" hidden>                    
+                <label for="respaldo" hidden>A que colección</label>
+                <select title="seleccione a que colección hacer respaldo" name="respaldo" id="respaldo" class="form-select mb-3" aria-label="Large select example" hidden>
+                    <option selected value="usuarios">usuario</option>
+                    <option value="vacantes">vacantes</option>
+                    <option value="pruebaspsicometricas">Pruebas psicometricas</option>
+                    <option value="candidatos">Datos de candidatos</option>
+                </select>
+                <button class="btn btn-primary mt-2" type="submit" id="crear">Crear datos de respaldo</button>
+            </form>
+        </div>
+    </div>
+    <div class="col">
+        
+    </div>
+</main>
+{%endblock%}

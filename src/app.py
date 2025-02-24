@@ -21,20 +21,31 @@ def custom_serializer(obj):
     raise TypeError(f"Type {type(obj)} not serializable")
 
 app = Flask(__name__)  # inicio de la aplicación
+app.secret_key = "nota_poner_clave_sifrada"
 
 @app.route('/')
 def inicio():
-    return render_template('base.html')
+    return render_template('descarga.html')
 
-@app.route('/datos_coleccion', methods=['POST'])
-def obtener_datos():
-    archivo_credenciales = request.files['file-select'] # obtenemos el archivo.
+@app.route('/ingresar_datos')
+def ingresar_datos():
+    return render_template('ingreso.html')
 
-    # Guardar el archivo temporalmente en el servidor
+@app.route('/mandar_datos')
+def mandar():
+    archivo_credenciales = request.files['credenciales']  # obtenemos el archivo de las credenciales.
+    archivo_db = request.files['backup']# obtenenmos el archivo del backup
+
+    # Guardar el archivo de las credenciales temporalmente en el servidor
     credenciales_path = os.path.join('temp', 'firebase_credentials.json')
     archivo_credenciales.save(credenciales_path)
+    
+    # Guarda el back temporamlente en el servidor
+    backup_path = os.path.join('temp', 'backup.json')
+    archivo_db.save(backup_path)
+
     if not firebase_admin._apps:
-        credencial = credentials.Certificate(credenciales_path) # proporcionamos la ruta del archivo
+        credencial = credentials.Certificate(credenciales_path)  # proporcionamos la ruta del archivo
         firebase_admin.initialize_app(credencial)
 
     # Desinicializa la aplicación Firebase actual, si existe
@@ -44,38 +55,16 @@ def obtener_datos():
     # Inicializa Firebase con el nuevo archivo de credenciales
     credencial = credentials.Certificate(credenciales_path)
     firebase_admin.initialize_app(credencial)
-
+    
     # Inicializando la conexión con Firebase
     db = firestore.client()  # conexión a la base de datos de Firebase
 
-    # Accediendo a una colección de Firestore
-    coleccion_ref = db.collection(f"{request.form['respaldo']}")
-    docs = coleccion_ref.stream()
+        
 
-    # Recogiendo los datos de los documentos
-    datos = []
-    for doc in docs:
-        doc_dict = doc.to_dict()
-        convert_timestamp(doc_dict)
+    os.remove(credenciales_path)# remover credencial
+    os.remove(backup_path)# remover backup
 
-        datos.append(doc_dict)
-
-    # Obtener la fecha actual para crear la carpeta en este caso solo funciona en mac.
-    fecha_hoy = datetime.datetime.now().strftime('%d-%m-%Y')
-    carpeta_destino = os.path.join(os.environ['HOME'], 'Documents', 'respaldos', f"{request.form['nombre']} {fecha_hoy}")
-
-    # Crear la carpeta si no existe
-    if not os.path.exists(carpeta_destino):
-        os.makedirs(carpeta_destino)
-
-    # Guardar los datos en un archivo JSON dentro de la carpeta
-    archivo_destino = os.path.join(carpeta_destino, f"{request.form['respaldo']}.json")
-    with open(archivo_destino, 'w') as f:
-        json.dump(datos, f, indent=4, default=custom_serializer)
-    
-    os.remove(credenciales_path)
-
-    return redirect(url_for('inicio'))
+    return redirect(url_for('mandar'))
 
 @app.route('/datos_completos', methods=['POST'])
 def obtener_datos2():
@@ -133,6 +122,57 @@ def obtener_datos2():
     with open(archivo_destino, 'w') as f:
         json.dump(datos, f, indent=4, default=custom_serializer)
 
+    os.remove(credenciales_path)
+
+    return redirect(url_for('inicio'))
+
+@app.route('/datos_coleccion', methods=['POST'])
+def obtener_datos():
+    archivo_credenciales = request.files['file-select'] # obtenemos el archivo.
+
+    # Guardar el archivo temporalmente en el servidor
+    credenciales_path = os.path.join('temp', 'firebase_credentials.json')
+    archivo_credenciales.save(credenciales_path)
+    if not firebase_admin._apps:
+        credencial = credentials.Certificate(credenciales_path) # proporcionamos la ruta del archivo
+        firebase_admin.initialize_app(credencial)
+
+    # Desinicializa la aplicación Firebase actual, si existe
+    if firebase_admin._apps:
+        firebase_admin.delete_app(firebase_admin.get_app())
+
+    # Inicializa Firebase con el nuevo archivo de credenciales
+    credencial = credentials.Certificate(credenciales_path)
+    firebase_admin.initialize_app(credencial)
+
+    # Inicializando la conexión con Firebase
+    db = firestore.client()  # conexión a la base de datos de Firebase
+
+    # Accediendo a una colección de Firestore
+    coleccion_ref = db.collection(f"{request.form['respaldo']}")
+    docs = coleccion_ref.stream()
+
+    # Recogiendo los datos de los documentos
+    datos = []
+    for doc in docs:
+        doc_dict = doc.to_dict()
+        convert_timestamp(doc_dict)
+
+        datos.append(doc_dict)
+
+    # Obtener la fecha actual para crear la carpeta en este caso solo funciona en mac.
+    fecha_hoy = datetime.datetime.now().strftime('%d-%m-%Y')
+    carpeta_destino = os.path.join(os.environ['HOME'], 'Documents', 'respaldos', f"{request.form['nombre']} {fecha_hoy}")
+
+    # Crear la carpeta si no existe
+    if not os.path.exists(carpeta_destino):
+        os.makedirs(carpeta_destino)
+
+    # Guardar los datos en un archivo JSON dentro de la carpeta
+    archivo_destino = os.path.join(carpeta_destino, f"{request.form['respaldo']}.json")
+    with open(archivo_destino, 'w') as f:
+        json.dump(datos, f, indent=4, default=custom_serializer)
+    
     os.remove(credenciales_path)
 
     return redirect(url_for('inicio'))
