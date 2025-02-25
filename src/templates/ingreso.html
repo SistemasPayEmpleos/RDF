@@ -4,18 +4,20 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} text-center">{{ message }}</div>
+                    <div class="mt-3 alert alert-{{ category }} text-center">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-    <form action="/ingresando" method="post">
-        <label for="credenciales">Ingresa Credenciales de Firebase(api key)</label>
-        <input type="file" name="credenciales" id="credenciales" class="form-control mt-2">
-        
-        <label for="backup">Ingresa base de datos(extención json)</label>
-        <input type="file" name="backup" id="backup" class="form-control mt-2 mb-3">
+    <h1 class="text-center">Subir a base de datos</h1>
+    <form action="/mandar_datos" method="POST" enctype="multipart/form-data">
+        <div class="mt-3">
+            <label for="credenciales">Ingresa credenciales de Firebase(api key)</label>
+            <input type="file" name="credenciales" id="credenciales" class="form-control mt-2 mb-1">
+            <label for="backup">Ingresa base de datos(extención json)</label>
+            <input type="file" name="backup" id="backup" class="form-control mt-2 mb-3">
 
-        <button class="btn btn-primary" type="submit">Ingresar datos</button>
+            <button class="btn btn-primary" type="submit">Ingresar datos</button>
+        </div>
     </form>
 </main>
 {%endblock%}

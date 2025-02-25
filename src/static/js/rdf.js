@@ -8,7 +8,7 @@ radioUno = document.getElementById('uno'); // radio uno
 radioTodo = document.getElementById('todo');// radio todo
 btnCrear = document.getElementById/('crear');// boton de crear
 formulario = document.getElementById('formulario');// formulario
-  
+
 radioUno.addEventListener('change',()=>{ //evento de cambio checkbox  
     if (radioUno.checked){
         radioTodo.checked = false; // cambia el check box de todo a falso 

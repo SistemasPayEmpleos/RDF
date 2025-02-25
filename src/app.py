@@ -1,7 +1,7 @@
 import os
 import datetime
 import json
-from flask import Flask, request, redirect, render_template, url_for
+from flask import Flask, request, redirect, render_template, url_for, flash
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -28,43 +28,64 @@ def inicio():
     return render_template('descarga.html')
 
 @app.route('/ingresar_datos')
-def ingresar_datos():
+def ingresar():
     return render_template('ingreso.html')
 
-@app.route('/mandar_datos')
+@app.route('/mandar_datos', methods= ['GET','POST'])
 def mandar():
-    archivo_credenciales = request.files['credenciales']  # obtenemos el archivo de las credenciales.
-    archivo_db = request.files['backup']# obtenenmos el archivo del backup
+    if request.method == 'POST':
+        archivo_credenciales = request.files['credenciales']  # obtenemos el archivo de las credenciales.
+        archivo_db = request.files['backup'] # obtenenmos el archivo del backup
+        try:
+            # Guardar el archivo de las credenciales temporalmente en el servidor
+            credenciales_path = os.path.join('temp', 'firebase_credentials.json')
+            archivo_credenciales.save(credenciales_path)
+            
+            # Guarda el back temporamlente en el servidor
+            backup_path = os.path.join('temp', 'backup.json')
+            archivo_db.save(backup_path)
 
-    # Guardar el archivo de las credenciales temporalmente en el servidor
-    credenciales_path = os.path.join('temp', 'firebase_credentials.json')
-    archivo_credenciales.save(credenciales_path)
-    
-    # Guarda el back temporamlente en el servidor
-    backup_path = os.path.join('temp', 'backup.json')
-    archivo_db.save(backup_path)
+            # Si no hay aplicaciones de Firebase inicializadas, inicializamos una
+            if not firebase_admin._apps:
+                credencial = credentials.Certificate(credenciales_path)  # proporcionamos la ruta del archivo
+                firebase_admin.initialize_app(credencial)
 
-    if not firebase_admin._apps:
-        credencial = credentials.Certificate(credenciales_path)  # proporcionamos la ruta del archivo
-        firebase_admin.initialize_app(credencial)
+            # Desinicializa la aplicación Firebase actual, si existe
+            if firebase_admin._apps:
+                firebase_admin.delete_app(firebase_admin.get_app())
 
-    # Desinicializa la aplicación Firebase actual, si existe
-    if firebase_admin._apps:
-        firebase_admin.delete_app(firebase_admin.get_app())
+            # Inicializa Firebase con el nuevo archivo de credenciales
+            credencial = credentials.Certificate(credenciales_path)
+            firebase_admin.initialize_app(credencial)
+            
+            with open(backup_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
 
-    # Inicializa Firebase con el nuevo archivo de credenciales
-    credencial = credentials.Certificate(credenciales_path)
-    firebase_admin.initialize_app(credencial)
-    
-    # Inicializando la conexión con Firebase
-    db = firestore.client()  # conexión a la base de datos de Firebase
+            # 🔍 Verifica que el JSON tenga el formato correcto
+            if not isinstance(data, dict):
+                flash("❌ Error: El archivo JSON debe contener un diccionario con colecciones y documentos", "danger")
+                return redirect(url_for('ingresar'))
 
-        
+            db = firestore.client()  # Conectar a Firestore
 
-    os.remove(credenciales_path)# remover credencial
-    os.remove(backup_path)# remover backup
+            for collection, documents in data.items():
+                if isinstance(documents, list):  #  Si es una lista, generamos IDs automáticos
+                    for doc_data in documents:
+                        db.collection(collection).add(doc_data)  #  Se usa 'add()' en lugar de 'set()'
+                elif isinstance(documents, dict):  # Si es un diccionario, usamos las claves como IDs
+                    for doc_id, doc_data in documents.items():
+                        db.collection(collection).document(doc_id).set(doc_data)
+                else:
+                    flash(f"❌ Error: La colección '{collection}' tiene un formato incorrecto", "danger")
+                    return redirect(url_for('ingresar'))
+            
+            os.remove(backup_path)
+            os.remove(credenciales_path)
 
-    return redirect(url_for('mandar'))
+        except Exception as e:
+                flash(f"❌ Error: {e}", "danger")
+
+        return redirect(url_for('ingresar'))
 
 @app.route('/datos_completos', methods=['POST'])
 def obtener_datos2():
@@ -179,3 +200,5 @@ def obtener_datos():
 
 if __name__ == '__main__':  # corre la aplicación en caso de estar como principal
     app.run()
+
+    # HM Info202401.
