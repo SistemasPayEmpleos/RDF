@@ -10,7 +10,7 @@ desde la terminal ejecute <u>cd env/scripts/activate.bat</u>
 al principio de su linea de comandos aparecera (env) esto significa que ya esta en el entorno virtual.
 despues navege hacia atras cd.. dos veces.
 
-y navege a cd <u>src</u> cuando este adentro ejecute <u>pip install -r requirement.txt</u> esto instalara todas las dependencias que necesita el proyecto.
+y navege a <u>cd src</u> cuando este adentro ejecute <u>pip install -r requirement.txt</u> esto instalara todas las dependencias que necesita el proyecto.
 
 despues de esto debera ejecuatar uno de los dos comandos mencionados anteriormente.
 
